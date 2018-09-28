@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Hello world</title>
+   </head>
+
+   <script src = "/socket.io/socket.io.js"></script>
+   <script>
+      var socket = io();
+      var user;
+      var jtoken;
+      function sendOTP() {
+         var user.name = document.getElementById('username').value;
+         var user.password = document.getElementById('password').value;
+         var user.phoneNumber = document.getElementById('phoneNumber').value;
+         socket.emit('sendOTP', user.phoneNumber);
+         console.log('otp sent');
+      };
+
+      socket.on('userExists', function(data) {
+         document.getElementById('error-container').innerHTML = data;
+      });
+      socket.on('userSet', function(data) {
+         document.body.innerHTML = '<input type = "text" id = "otp">\
+        <button type = "button" name = "button" onclick = "otpVerification()">OTP</button>\
+         <div id = "message-container"></div>';
+      });
+
+      socket.on('login',function(data){
+        jtoken = data;
+        document.body.innerHTML = '<input type = "text" id = "phoneNumber">\
+        <button type = "button" name = "button" onclick = "login()">login</button>\
+         <div id = "message-container"></div>';
+      });
+
+      socket.on('serviceRequest',function(){
+
+        document.body.innerHTML = '<input type = "text" id = "lat">\
+        <input type = "text" id = "lon">\
+        <button type = "button" name = "button" onclick = "carRequest()">CarRepair</button>\
+        <button type = "button" name = "button" onclick = "bikeRequest()">BikeRepair</button>\
+         <div id = "message-container"></div>';
+      });
+
+
+      socket.on('mechListDisplay', function(data){
+        if(data) {
+        //console.log(data);
+        document.body.innerHTML = '<div>' + data + '</div>'
+        }
+      });
+
+      socket.on('intimate', function(data){
+        if(data) {
+        document.body.innerHTML = '<div>' + data ,"mechanic is on his way" + '</div>'
+        }
+      });
+
+
+      function otpVerification() {
+         var msg = document.getElementById('otp').value;
+         if(msg) {
+            socket.emit('verifyOtp', {otp:msg, name:user.name, pass:user.password, phone:user.phoneNumber});
+         }
+      }
+
+      function login() {
+        var msg = document.getElementById('phoneNumber').value;
+        if(msg) {
+           socket.emit('authorize', {number:msg , jwt:jtoken});
+        }
+      }
+
+      function carRequest() {
+        var loc = [document.getElementById('lon').value, document.getElementById('lat').value];
+        if(loc) {
+           socket.emit('nearestCarMech', {location:loc, jwt:jtoken});
+        }
+      }
+
+      function bikeRequest() {
+        var loc = [document.getElementById('lon').value, document.getElementById('lat').value];
+        if(loc) {
+           socket.emit('nearestBikeMech', {location:loc, jwt:jtoken});
+        }
+      }
+
+
+
+   </script>
+
+   <body>
+      <div id = "error-container"></div>
+      <input id = "username" type = "text" name = "name" value = ""
+         placeholder = "Enter your name!">
+      <input id = "password" type = "text" name = "pass" value = ""
+         placeholder = "Enter a password!">
+      <input id = "phoneNumber" type = "text" name = "phone" value = ""
+         placeholder = "Enter your number!">
+      <button type = "button" name = "button" onclick = "sendOTP()">
+         Send OTP!
+      </button>
+   </body>
+</html>

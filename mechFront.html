@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Hello world</title>
+   </head>
+
+   <script src = "/socket.io/socket.io.js"></script>
+   <script>
+      var socket = io();
+      var mech;
+      var jtoken;
+      var requestid;
+      function sendOTP() {
+         var mech.name = document.getElementById('username').value;
+         var mech.password = document.getElementById('password').value;
+         var mech.phoneNumber = document.getElementById('phoneNumber').value;
+         socket.emit('OTPsend', mech.phoneNumber);
+         console.log('otp sent');
+      };
+
+      socket.on('mechExists', function(data) {
+         document.getElementById('error-container').innerHTML = data;
+      });
+      socket.on('mechSet', function(data) {
+         document.body.innerHTML = '<input type = "text" id = "otp">\
+        <button type = "button" name = "button" onclick = "otpVerification()">OTP</button>\
+         <div id = "message-container"></div>';
+      });
+
+      socket.on('logon',function(data){
+        jtoken = data;
+        document.body.innerHTML = '<input type = "text" id = "phoneNumber">\
+        <button type = "button" name = "button" onclick = "login()">login</button>\
+         <div id = "message-container"></div>';
+      });
+
+      socket.on('repairRequest',function(data){
+        requestid = data;
+        document.body.innerHTML = '<button type = "button" name = "button" onclick = "acceptRequest()">Accept</button>\
+        <button type = "button" name = "button" onclick = "rejectRequest()">Reject</button>\
+         <div id = "message-container"></div>';
+      });
+
+
+
+      function otpVerification() {
+         var msg = document.getElementById('otp').value;
+         if(msg) {
+            socket.emit('otpVerify', {otp:msg, name:mech.name, pass:mech.password, phone:mech.phoneNumber});
+         }
+      }
+
+      function login() {
+        var msg = document.getElementById('phoneNumber').value;
+        if(msg) {
+           socket.emit('approval', {number:msg , jwt:jtoken});
+        }
+      }
+
+      function acceptRequest() {
+        socket.emit('accepted', requestid);
+        //socket.emit('serviceStarted', requestid);
+      }
+
+      function rejectRequest() {
+        socket.emit('rejected', requestid);
+      }
+
+
+
+   </script>
+
+   <body>
+      <div id = "error-container"></div>
+      <input id = "username" type = "text" name = "name" value = ""
+         placeholder = "Enter your name!">
+      <input id = "password" type = "text" name = "pass" value = ""
+         placeholder = "Enter a password!">
+      <input id = "phoneNumber" type = "text" name = "phone" value = ""
+         placeholder = "Enter your number!">
+      <button type = "button" name = "button" onclick = "sendOTP()">
+         Send OTP!
+      </button>
+   </body>
+</html>
